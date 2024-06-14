@@ -1,0 +1,20 @@
+require: rubocop-rails
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 2.7  # Specify your target Ruby version here
+  Exclude:
+    - 'db/schema.rb'
+    - 'node_modules/**/*'
+    - 'bin/**/*'
+    - 'db/migrate/*'
+    - 'vendor/**/*'
+
+# Style guide configurations
+Style/StringLiterals:
+  EnforcedStyle: double_quotes  # Prefer double quotes for strings
+
+Layout/LineLength:
+  Max: 100  # Set maximum line length to 100 characterss
+
+# Custom configurations for other RuboCop extensions can go here

@@ -29,18 +29,18 @@ module Api
 
         aggregated_data = initialize_aggregated_data
         data.each do |result|
-          # todo; read max and min values to calculate min and max properly.
-          price = result["c"]
+          high_price = result["h"]
+          low_price = result["l"]
           volume = result["v"]
-          update_aggregated_data(aggregated_data, price, volume)
+          daily_average_price = (high_price + low_price) / 2.0
+          update_aggregated_data(aggregated_data, high_price, low_price, volume)
         end
         compute_final_aggregates(aggregated_data, data.length)
       end
 
-      # TODO: check if we are defining the aggregated data correctly
       def initialize_aggregated_data
         {
-          total_price: 0,
+          sum_daily_averages: 0,
           total_volume: 0,
           max_volume: -Float::INFINITY,
           min_volume: Float::INFINITY,
@@ -49,20 +49,18 @@ module Api
         }
       end
 
-      def update_aggregated_data(aggregated_data, price, volume)
-        aggregated_data[:total_price] += price
+      def update_aggregated_data(aggregated_data, high_price, low_price, volume)
         aggregated_data[:total_volume] += volume
+        aggregated_data[:sum_daily_averages] += (high_price + low_price) / 2
         aggregated_data[:max_volume] = [aggregated_data[:max_volume], volume].max
         aggregated_data[:min_volume] = [aggregated_data[:min_volume], volume].min
-        aggregated_data[:max_price] = [aggregated_data[:max_price], price].max
-        aggregated_data[:min_price] = [aggregated_data[:min_price], price].min
+        aggregated_data[:max_price] = [aggregated_data[:max_price], high_price].max
+        aggregated_data[:min_price] = [aggregated_data[:min_price], low_price].min
       end
 
-      # Todo: I think there's a an error of how I'm calculating the average_price
-      # lowest price and High price should be consider.
       def compute_final_aggregates(aggregated_data, result_count)
         {
-          average_price: aggregated_data[:total_price] / result_count,
+          average_price: aggregated_data[:sum_daily_averages] / result_count,
           average_volume: aggregated_data[:total_volume] / result_count,
           max_volume: aggregated_data[:max_volume],
           min_volume: aggregated_data[:min_volume],

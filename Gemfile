@@ -26,7 +26,7 @@ gem "rubocop", "~> 1.64", require: false
 gem "rubocop-rails", "~> 2.25.0", require: false
 
 # Support CORS
-gem 'rack-cors', "~> 2.0.2", require: 'rack/cors'
+gem "rack-cors", "~> 2.0.2", require: "rack/cors"
 
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"
@@ -36,6 +36,11 @@ gem 'rack-cors', "~> 2.0.2", require: 'rack/cors'
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
+
+# Testing
+gem "rspec-rails", "~> 6.1.2"
+gem "vcr", "~> 6.2.0"
+gem "webmock", "~> 3.23.1"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw jruby]

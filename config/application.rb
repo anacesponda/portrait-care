@@ -9,7 +9,7 @@ require "rails/all"
 Bundler.require(*Rails.groups)
 
 # Load .env file in development and test environments
-Dotenv::Railtie.load if Rails.env.development? || Rails.env.test?
+Dotenv::Rails.load if Rails.env.development? || Rails.env.test?
 
 module RailsApi
   # Application class where all the config goes.

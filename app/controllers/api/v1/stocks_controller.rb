@@ -5,24 +5,26 @@ module Api
     # Controller for stocks
     class StocksController < ApplicationController
       def statistics
-        response = ::ApiClients::PolygonApi.connection.get(url) do |req|
-          req.params["apiKey"] = api_key
+        response = fetch_api
+
+        unless response.success?
+          return render json: { error: "Failed to fetch data" }, status: :bad_request
         end
 
-        if response.success?
-          data = JSON.parse(response.body)
-          if data["queryCount"].to_i > 0
-            results = process_data(data["results"])
-            render json: results
-          else
-            render json: { error: "No data available" }, status: :bad_request
-          end
+        data = JSON.parse(response.body)
+        if data["queryCount"].to_i.positive?
+          render json: process_data(data["results"])
         else
-          render json: { error: "Failed to fetch data" }, status: :bad_request
+          render json: { error: "No data available" }, status: :bad_request
         end
       end
 
       private
+
+      def fetch_api
+        url = "/v2/aggs/ticker/#{ticker}/range/#{range}/#{start_date}/#{end_date}"
+        ::ApiClients::PolygonApi.connection.get(url) { |req| req.params["apiKey"] = api_key }
+      end
 
       def process_data(data)
         initialize_aggregated_data
@@ -32,7 +34,7 @@ module Api
           high_price = result["h"]
           low_price = result["l"]
           volume = result["v"]
-          daily_average_price = (high_price + low_price) / 2.0
+          (high_price + low_price) / 2.0
           update_aggregated_data(aggregated_data, high_price, low_price, volume)
         end
         compute_final_aggregates(aggregated_data, data.length)
@@ -50,10 +52,18 @@ module Api
       end
 
       def update_aggregated_data(aggregated_data, high_price, low_price, volume)
+        update_volume(aggregated_data, volume)
+        update_price_info(aggregated_data, high_price, low_price)
+      end
+
+      def update_volume(aggregated_data, volume)
         aggregated_data[:total_volume] += volume
-        aggregated_data[:sum_daily_averages] += (high_price + low_price) / 2
         aggregated_data[:max_volume] = [aggregated_data[:max_volume], volume].max
         aggregated_data[:min_volume] = [aggregated_data[:min_volume], volume].min
+      end
+
+      def update_price_info(aggregated_data, high_price, low_price)
+        aggregated_data[:sum_daily_averages] += (high_price + low_price) / 2
         aggregated_data[:max_price] = [aggregated_data[:max_price], high_price].max
         aggregated_data[:min_price] = [aggregated_data[:min_price], low_price].min
       end
@@ -67,10 +77,6 @@ module Api
           max_price: aggregated_data[:max_price],
           min_price: aggregated_data[:min_price]
         }
-      end
-
-      def url
-        "/v2/aggs/ticker/#{ticker}/range/#{range}/#{start_date}/#{end_date}"
       end
 
       def ticker
